@@ -1,46 +1,37 @@
 package main
 
 import (
-	"encoding/json"
-	"io"
-	"log"
-	"net/http"
+	// "encoding/json"
+	"errors"
+	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
-	http.HandleFunc("/beef/summary", beefSummaryHandler)
-	if err := http.ListenAndServe(":8000",nil); err != nil {
-		log.Fatal(err)
-	}
+
+	app := fiber.New()
+	app.Get("/beef/summary",beefSummaryHandler)
+	app.Listen(":8000")
 	
 }
 
-func beefSummaryHandler(w http.ResponseWriter, r *http.Request){
-	if r.URL.Path != "/beef/summary" {
-		http.Error(w, "404 Not found", http.StatusNotFound)
-		return
-	}
-
-	if r.Method != "GET" {
-		http.Error(w, "Method is not supported.", http.StatusNotFound)
-		return
-	}
-
+func beefSummaryHandler(c *fiber.Ctx) error {
 	data := countWords("https://baconipsum.com/api/?type=meat-and-filler&paras=99&format=text")
 	resp := struct {
-		Beef map[string]interface{} `json:"beef"`
+		Beef map[string]int `json:"beef"`
 	}{
 		Beef: data,
 	}
 
-	json.NewEncoder(w).Encode(&resp)
+	return c.JSON(resp)
 }
 
-func countWords(url string) map[string]interface{} {
+func countWords(url string) map[string]int {
 	text,_ := fetchData(url)
-
+	fmt.Print(text)
 	wordRegex := regexp.MustCompile(`[\w-]+`)
 	matches := wordRegex.FindAllString(text, -1)
 
@@ -50,30 +41,18 @@ func countWords(url string) map[string]interface{} {
 		wordCount[word]++
 	}
 
-	res := map[string]interface{}{
-		"beef": wordCount,
-	}
-
-	// jsonData, err := json.Marshal(res)
-	// if err != nil {
-	// 	fmt.Println("Error marshaling JSON:", err)
-	// 	return
-	// }
-
-    return res
+    return wordCount
 }
 
 func fetchData(url string) (string, error) {
-    response, err := http.Get(url)
-    if err != nil {
-        return "", err
-    }
-    defer response.Body.Close()
+	agent := fiber.Get(url)
+	statusCode, body, errs := agent.Bytes()
+	if len(errs) > 0 {
+		return "",errs[0]
+	}
+	if statusCode != 200 {
+		return "",errors.New("status code != 200")
+	}
 
-    body, err := io.ReadAll(response.Body)
-    if err != nil {
-        return "", err
-    }
-
-    return string(body), nil
+	return string(body),nil
 }
