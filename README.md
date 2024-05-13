@@ -1,1 +1,1 @@
-URL: https://solutions7-backend-spk23ljzqq-uc.a.run.app
+URL: https://solutions7-backend-spk23ljzqq-uc.a.run.app/beef/summary
