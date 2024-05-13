@@ -20,24 +20,59 @@ func TestRegexStringFromInvalidApi(t *testing.T) {
 	}
 }
 
-func TestCountWordsEqualToRegexWords(t *testing.T) {
+func TestSummaryWordsEqualToRegexWords(t *testing.T) {
 	url := "https://baconipsum.com/api/?type=meat-and-filler&paras=99&format=text"
 	matches,err := RegexStringFromApi(url,`[\w-]+`)
 	if err != nil {
 		t.Error("Bad gateway")
 	}
-	result,err := CountWords(matches)
-	if err != nil {
-		t.Error("Bad gateway")
+
+	testCases := []struct {
+		name string
+		matches []string
+		expected int
+	}{
+		{"Mock Data",[]string{
+			"Magna",
+			"short",
+			"loin",
+			"est",
+			"anim",
+			"doner",
+			"consequat",
+			"Cillum",
+			"magna",
+			"ut",
+			"shankle",
+			"excepteur",
+			"qui",
+			"quis",
+			"do",
+			"bacon",
+			"duis",
+			"cupim",
+			"turkey",
+			"in",
+			"anim",
+			"Magna",
+		},22},
+		{"Real Data",matches, len(matches)},
 	}
 
-	get := 0
-    for _, count := range result {
-        get += count
-    }
-
-	want := len(matches)
-	if want != get{
-		t.Errorf("want result %d words but get %d words",want,get)
+	for _,tc := range testCases{
+		t.Run(tc.name, func(t *testing.T){
+			result,err := CountWords(tc.matches)
+			if err != nil {
+				t.Error("Bad gateway")
+			}
+			get := 0
+			for _, count := range result {
+				get += count
+			}
+			expected := tc.expected
+			if get != expected {
+				t.Errorf("Error on %s that expect to %d but get %d",tc.name,expected,get)
+			}
+		})
 	}
 }
