@@ -8,8 +8,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func CountWords(url string) map[string]int {
-	text, _ := fetchData(url)
+func CountWords(url string) (map[string]int, error) {
+	text, err := fetchData(url)
+	if err !=  nil {
+		return nil,err
+	}
 	wordRegex := regexp.MustCompile(`[\w-]+`)
 	matches := wordRegex.FindAllString(text, -1)
 
@@ -19,7 +22,7 @@ func CountWords(url string) map[string]int {
 		wordCount[word]++
 	}
 
-	return wordCount
+	return wordCount,nil
 }
 
 func fetchData(url string) (string, error) {
